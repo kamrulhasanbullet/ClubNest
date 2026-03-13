@@ -18,10 +18,52 @@ import {
   Loader,
 } from "lucide-react";
 
+/* ── Font injection ─────────────────────────────── */
+const useFont = () => {
+  useEffect(() => {
+    if (document.getElementById("allclubs-font")) return;
+    const l = document.createElement("link");
+    l.id = "allclubs-font";
+    l.href =
+      "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Outfit:wght@300;400;500;600&display=swap";
+    l.rel = "stylesheet";
+    document.head.appendChild(l);
+  }, []);
+};
+
+/* ── Keyframe animations (Tailwind can't do these) ─ */
+const ANIM = `
+  @keyframes acFadeUp  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes acSlideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes acPulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+  .font-bricolage { font-family:'Bricolage Grotesque',sans-serif; }
+  .font-outfit    { font-family:'Outfit',sans-serif; }
+  .ac-fadein  { animation: acFadeUp 0.4s cubic-bezier(.22,1,.36,1) both; }
+  .ac-panel   { animation: acSlideDown 0.22s cubic-bezier(.22,1,.36,1) forwards; }
+  .ac-skel    { animation: acPulse 1.6s ease-in-out infinite; }
+  /* card hover */
+  .club-card { transition: transform .32s cubic-bezier(.22,1,.36,1), box-shadow .32s cubic-bezier(.22,1,.36,1), border-color .2s; }
+  .club-card:hover { transform:translateY(-6px); box-shadow:0 28px 70px rgba(79,70,229,0.13); border-color:rgba(79,70,229,0.22)!important; }
+  .club-card:hover .card-img  { transform:scale(1.08); }
+  .club-card:hover .card-overlay { opacity:1!important; }
+  .club-card:hover .view-btn  { background:#4f46e5!important; }
+  .card-img     { transition:transform .5s cubic-bezier(.22,1,.36,1); }
+  .card-overlay { transition:opacity .3s; }
+  .view-btn     { transition:background .22s; }
+  /* inputs */
+  .ac-input:focus { outline:none; box-shadow:0 0 0 3px rgba(79,70,229,0.12); border-color:#4f46e5!important; }
+  .ac-select:focus{ outline:none; box-shadow:0 0 0 3px rgba(79,70,229,0.12); border-color:#4f46e5!important; }
+  /* chip hover */
+  .cat-chip:hover { background:#4f46e5!important; color:#fff!important; border-color:#4f46e5!important; }
+  /* fee buttons */
+  .fee-btn { transition:all .18s; }
+`;
+
 export const AllClubs = () => {
+  useFont();
   const { user } = use(AuthContext);
 
-  // State for filters and sorting
+  /* ── State (logic untouched) ──────────────────── */
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -29,19 +71,12 @@ export const AllClubs = () => {
   const [membershipFeeFilter, setMembershipFeeFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
 
-  // FIX: Debounce search input
   useEffect(() => {
-    const timerId = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
-    }, 500); // 500ms debounce
-
-    return () => {
-      clearTimeout(timerId);
-    };
+    const id = setTimeout(() => setDebouncedSearch(searchTerm), 500);
+    return () => clearTimeout(id);
   }, [searchTerm]);
 
-  // Get all clubs for categories dropdown
-  const { data: allClubsRaw = [], isLoading: categoriesLoading } = useQuery({
+  const { data: allClubsRaw = [] } = useQuery({
     queryKey: ["allClubsRaw"],
     queryFn: async () => {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/clubs`);
@@ -50,12 +85,10 @@ export const AllClubs = () => {
     },
   });
 
-  // Extract unique categories
   const uniqueCategories = [
-    ...new Set(allClubsRaw.map((club) => club.category).filter(Boolean)),
+    ...new Set(allClubsRaw.map((c) => c.category).filter(Boolean)),
   ];
 
-  // Main query with filters and sorting
   const {
     data: clubs = [],
     isLoading,
@@ -64,29 +97,20 @@ export const AllClubs = () => {
   } = useQuery({
     queryKey: [
       "clubs",
-      debouncedSearch, // 🔥 Use debounced search
+      debouncedSearch,
       selectedCategory,
       selectedSort,
       membershipFeeFilter,
     ],
     queryFn: async () => {
-      // Build query parameters
       const params = new URLSearchParams();
-
       if (debouncedSearch) params.append("search", debouncedSearch);
-      if (selectedCategory && selectedCategory !== "all") {
+      if (selectedCategory && selectedCategory !== "all")
         params.append("category", selectedCategory);
-      }
-
-      // FIX: Membership fee filter mapping
-      if (membershipFeeFilter !== "all") {
+      if (membershipFeeFilter !== "all")
         params.append("membershipFee", membershipFeeFilter);
-      }
-
-      // FIX: Sort parameter mapping
-      let sortBy = selectedSort;
-      let order = "desc";
-
+      let sortBy = selectedSort,
+        order = "desc";
       switch (selectedSort) {
         case "newest":
           sortBy = "newest";
@@ -116,37 +140,19 @@ export const AllClubs = () => {
           sortBy = "newest";
           order = "desc";
       }
-
       params.append("sortBy", sortBy);
       params.append("order", order);
-
-      console.log("📤 Fetching clubs with params:", params.toString());
-
       const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/clubs?${params.toString()}`
+        `${import.meta.env.VITE_API_URL}/clubs?${params.toString()}`,
       );
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("❌ API Error:", errorText);
-        throw new Error(`Failed to fetch clubs: ${res.status}`);
-      }
-
-      const data = await res.json();
-      console.log("📥 Received clubs:", data.length);
-      return data;
+      if (!res.ok) throw new Error(`Failed to fetch clubs: ${res.status}`);
+      return res.json();
     },
-    // Optimize performance
-    staleTime: 30000, // 30 seconds
-    cacheTime: 60000, // 1 minute
+    staleTime: 30000,
+    gcTime: 60000,
   });
 
-  // Handle search input
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  // Clear all filters
+  const handleSearch = (e) => setSearchTerm(e.target.value);
   const handleClearFilters = () => {
     setSearchTerm("");
     setDebouncedSearch("");
@@ -154,8 +160,6 @@ export const AllClubs = () => {
     setSelectedSort("newest");
     setMembershipFeeFilter("all");
   };
-
-  // Count active filters
   const activeFiltersCount = [
     debouncedSearch,
     selectedCategory && selectedCategory !== "all",
@@ -163,265 +167,280 @@ export const AllClubs = () => {
     membershipFeeFilter !== "all",
   ].filter(Boolean).length;
 
-  // Loading skeleton
-  if (isLoading) {
-    return (
-      <div className="p-8 bg-[#fcfcfd]">
-        {/* Search and Filter Bar Skeleton */}
-        <div className="mb-8 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-pulse">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 h-12 bg-gray-200 rounded-xl"></div>
-            <div className="w-48 h-12 bg-gray-200 rounded-xl"></div>
-            <div className="w-32 h-12 bg-gray-200 rounded-xl"></div>
-          </div>
-        </div>
+  const sortLabels = {
+    newest: "Newest First",
+    oldest: "Oldest First",
+    nameAsc: "Name A–Z",
+    nameDesc: "Name Z–A",
+    feeLowest: "Lowest Fee",
+    feeHighest: "Highest Fee",
+  };
 
-        {/* Clubs Grid Skeleton */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+  /* ── Loading skeleton ─────────────────────────── */
+  if (isLoading)
+    return (
+      <div className="font-outfit min-h-screen bg-[#fafaf8] p-10">
+        <style>{ANIM}</style>
+        <div className="ac-skel w-64 h-12 rounded-xl bg-gray-200 mb-3" />
+        <div className="ac-skel w-44 h-5  rounded-lg bg-gray-200 mb-10" />
+        <div className="ac-skel h-16 rounded-2xl bg-gray-200 mb-9" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div
-              key={i}
-              className="h-[400px] bg-gray-100 rounded-[2.5rem] animate-pulse"
-            />
+            <div key={i} className="ac-skel h-96 rounded-2xl bg-gray-200" />
           ))}
         </div>
       </div>
     );
-  }
 
-  if (error) {
+  /* ── Error state ──────────────────────────────── */
+  if (error)
     return (
-      <div className="min-h-[400px] flex flex-col items-center justify-center text-red-500 p-8">
-        <div className="text-center">
-          <p className="text-lg font-semibold mb-2">Failed to load clubs</p>
-          <p className="text-sm text-gray-600 mb-4">{error.message}</p>
+      <div className="font-outfit min-h-screen bg-[#fafaf8] flex items-center justify-center">
+        <style>{ANIM}</style>
+        <div className="text-center p-10 bg-white rounded-3xl border border-red-100 max-w-sm shadow-sm">
+          <div className="text-5xl mb-4">⚠️</div>
+          <p className="font-bricolage text-lg font-bold text-red-600 mb-2">
+            Failed to load clubs
+          </p>
+          <p className="text-sm text-gray-400 mb-6">{error.message}</p>
           <button
             onClick={() => refetch()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-7 py-3 bg-[#1a1a2e] text-white font-bold text-sm rounded-xl hover:bg-indigo-600 transition-colors cursor-pointer"
           >
             Try Again
           </button>
         </div>
       </div>
     );
-  }
 
+  /* ── MAIN RENDER ──────────────────────────────── */
   return (
-    <div className="p-8 bg-[#fcfcfd] min-h-screen">
-      {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-4xl font-black text-gray-900 tracking-tight">
-          All <span className="text-blue-600">Clubs</span>
-        </h2>
-        <p className="text-gray-500 mt-2 font-light">
-          Explore and join the best communities.
-          <span className="font-medium ml-1">{clubs.length} clubs found</span>
-        </p>
+    <div className="font-outfit min-h-screen bg-[#fafaf8] px-6 md:px-10 py-12">
+      <style>{ANIM}</style>
+
+      {/* ══ PAGE HEADER ════════════════════════════ */}
+      <div className="flex items-end justify-between flex-wrap gap-3 mb-10">
+        <div>
+          <p className="text-[0.67rem] font-bold tracking-[0.18em] text-orange-500 uppercase mb-2">
+            Explore
+          </p>
+          <h1 className="font-bricolage text-[clamp(2.2rem,5vw,3.6rem)] font-extrabold leading-none tracking-[-0.05em] text-[#1a1a2e] m-0">
+            All{" "}
+            <span className="bg-linear-to-br from-indigo-500 to-orange-500 bg-clip-text text-transparent">
+              Clubs
+            </span>
+          </h1>
+          <p className="text-gray-400 mt-2.5 text-sm">
+            Explore and join the best communities.{" "}
+            <span className="text-indigo-600 font-semibold">
+              {clubs.length} clubs found
+            </span>
+          </p>
+        </div>
+
+        {/* active filter badge */}
+        {activeFiltersCount > 0 && (
+          <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-2xl px-4 py-2.5 shadow-sm">
+            <span className="text-sm text-gray-500">
+              {activeFiltersCount} filter{activeFiltersCount > 1 ? "s" : ""}{" "}
+              active
+            </span>
+            <button
+              onClick={handleClearFilters}
+              className="flex items-center gap-1 bg-red-50 text-red-600 text-[0.72rem] font-bold px-2 py-0.5 rounded-lg border-none cursor-pointer hover:bg-red-100 transition-colors"
+            >
+              <X size={11} /> Clear
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Search and Filter Bar */}
-      <div className="mb-8 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search Input */}
-          <div className="flex-1 relative">
+      {/* ══ SEARCH + FILTER BAR ════════════════════ */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-5 mb-8">
+        {/* main row */}
+        <div className="flex flex-wrap gap-3">
+          {/* Search input */}
+          <div className="relative flex-1 min-w-[220px]">
             <Search
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={20}
+              size={16}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
             />
             <input
               type="text"
-              placeholder="Search clubs by name..."
+              placeholder="Search clubs by name…"
               value={searchTerm}
               onChange={handleSearch}
-              className="w-full pl-12 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="ac-input w-full pl-11 pr-10 py-3 bg-[#fafaf8] border-[1.5px] border-gray-200 rounded-[14px] text-sm text-[#1a1a2e] font-outfit transition-all"
             />
+            {searchTerm !== debouncedSearch && (
+              <Loader
+                size={14}
+                className="absolute right-10 top-1/2 -translate-y-1/2 text-indigo-500 animate-spin"
+              />
+            )}
             {searchTerm && (
               <button
                 onClick={() => {
                   setSearchTerm("");
                   setDebouncedSearch("");
                 }}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 bg-gray-100 rounded-full w-5 h-5 flex items-center justify-center text-gray-500 cursor-pointer border-none hover:bg-gray-200 transition-colors"
               >
-                <X size={20} />
+                <X size={11} />
               </button>
-            )}
-            {/* Debounce indicator */}
-            {searchTerm !== debouncedSearch && (
-              <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
-                <Loader className="animate-spin text-blue-500" size={16} />
-              </div>
             )}
           </div>
 
-          {/* Sort Dropdown */}
-          <div className="relative">
+          {/* Sort */}
+          <div className="relative shrink-0">
             <select
               value={selectedSort}
               onChange={(e) => setSelectedSort(e.target.value)}
-              className="w-full md:w-auto px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer"
+              className="ac-select appearance-none pl-4 pr-10 py-3 bg-[#fafaf8] border-[1.5px] border-gray-200 rounded-[14px] text-sm text-gray-700 font-outfit cursor-pointer min-w-40 transition-all"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
-              <option value="nameAsc">Name (A-Z)</option>
-              <option value="nameDesc">Name (Z-A)</option>
+              <option value="nameAsc">Name (A–Z)</option>
+              <option value="nameDesc">Name (Z–A)</option>
               <option value="feeLowest">Lowest Fee</option>
               <option value="feeHighest">Highest Fee</option>
             </select>
             <ChevronDown
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400"
-              size={20}
+              size={15}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
             />
           </div>
 
-          {/* Filter Toggle Button */}
+          {/* Filter toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors"
+            className={`flex items-center gap-2 px-4 py-3 rounded-[14px] text-sm font-semibold border-[1.5px] cursor-pointer transition-all shrink-0 font-outfit
+              ${showFilters ? "bg-[#1a1a2e] text-white border-[#1a1a2e]" : "bg-[#fafaf8] text-gray-700 border-gray-200 hover:bg-gray-50"}`}
           >
-            <Filter size={20} />
-            <span>Filters</span>
+            <Filter size={15} />
+            Filters
             {activeFiltersCount > 0 && (
-              <span className="bg-blue-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+              <span className="bg-indigo-600 text-white rounded-full w-5 h-5 text-[0.65rem] font-extrabold flex items-center justify-center">
                 {activeFiltersCount}
               </span>
             )}
           </button>
-
-          {/* Clear Filters Button */}
-          {activeFiltersCount > 0 && (
-            <button
-              onClick={handleClearFilters}
-              className="px-4 py-3 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-xl transition-colors flex items-center gap-2"
-            >
-              <X size={20} />
-              Clear Filters
-            </button>
-          )}
         </div>
 
-        {/* Expanded Filters Panel */}
+        {/* expanded panel */}
         {showFilters && (
-          <div className="mt-6 pt-6 border-t border-gray-100 animate-slideDown">
+          <div className="ac-panel mt-5 pt-5 border-t border-gray-100">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Category Filter */}
+              {/* Category */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-[0.72rem] font-bold tracking-widest uppercase text-gray-400 mb-2.5">
                   Category
                 </label>
                 <div className="relative">
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+                    className="ac-select appearance-none w-full pl-3.5 pr-9 py-2.5 bg-[#fafaf8] border-[1.5px] border-gray-200 rounded-xl text-sm text-gray-700 font-outfit cursor-pointer"
                   >
                     <option value="all">All Categories</option>
-                    {uniqueCategories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
+                    {uniqueCategories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
                       </option>
                     ))}
                   </select>
                   <ChevronDown
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400"
-                    size={18}
+                    size={14}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                   />
                 </div>
               </div>
 
-              {/* Membership Fee Filter */}
+              {/* Fee filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-[0.72rem] font-bold tracking-widest uppercase text-gray-400 mb-2.5">
                   Membership Fee
                 </label>
                 <div className="flex gap-2">
-                  {["all", "free", "paid"].map((option) => (
+                  {["all", "free", "paid"].map((opt) => (
                     <button
-                      key={option}
-                      onClick={() => setMembershipFeeFilter(option)}
-                      className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-                        membershipFeeFilter === option
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                      key={opt}
+                      onClick={() => setMembershipFeeFilter(opt)}
+                      className={`fee-btn px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer border-[1.5px] font-outfit transition-all
+                        ${
+                          membershipFeeFilter === opt
+                            ? "bg-[#1a1a2e] text-white border-[#1a1a2e]"
+                            : "bg-[#fafaf8] text-gray-500 border-gray-200 hover:border-gray-300"
+                        }`}
                     >
-                      {option === "all" ? (
-                        <>
-                          <span>All</span>
-                        </>
-                      ) : option === "free" ? (
-                        <>
-                          <DollarSign size={16} />
-                          <span>Free</span>
-                        </>
-                      ) : (
-                        <>
-                          <DollarSign size={16} />
-                          <span>Paid</span>
-                        </>
-                      )}
+                      {opt === "free"
+                        ? "🎁 Free"
+                        : opt === "paid"
+                          ? "💳 Paid"
+                          : "All"}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Active Filters Display */}
+              {/* Active chips */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-[0.72rem] font-bold tracking-wiedest uppercase text-gray-400 mb-2.5">
                   Active Filters
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {debouncedSearch && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full text-sm">
-                      Search: "{debouncedSearch}"
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg text-[0.76rem] font-semibold">
+                      "{debouncedSearch}"
                       <button
                         onClick={() => {
                           setSearchTerm("");
                           setDebouncedSearch("");
                         }}
-                        className="hover:text-blue-900 ml-1"
+                        className="bg-transparent border-none cursor-pointer text-indigo-500 flex p-0 hover:text-indigo-700"
                       >
-                        <X size={14} />
+                        <X size={12} />
                       </button>
                     </span>
                   )}
                   {selectedCategory && selectedCategory !== "all" && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-800 rounded-full text-sm">
-                      Category: {selectedCategory}
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-lg text-[0.76rem] font-semibold">
+                      {selectedCategory}
                       <button
                         onClick={() => setSelectedCategory("")}
-                        className="hover:text-green-900 ml-1"
+                        className="bg-transparent border-none cursor-pointer text-green-600 flex p-0 hover:text-green-800"
                       >
-                        <X size={14} />
+                        <X size={12} />
                       </button>
                     </span>
                   )}
                   {membershipFeeFilter !== "all" && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-100 text-purple-800 rounded-full text-sm">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg text-[0.76rem] font-semibold">
                       {membershipFeeFilter === "free"
                         ? "Free Only"
                         : "Paid Only"}
                       <button
                         onClick={() => setMembershipFeeFilter("all")}
-                        className="hover:text-purple-900 ml-1"
+                        className="bg-transparent border-none cursor-pointer text-purple-600 flex p-0 hover:text-purple-800"
                       >
-                        <X size={14} />
+                        <X size={12} />
                       </button>
                     </span>
                   )}
                   {selectedSort !== "newest" && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-800 rounded-full text-sm">
-                      {selectedSort === "oldest" && "Oldest First"}
-                      {selectedSort === "nameAsc" && "Name A-Z"}
-                      {selectedSort === "nameDesc" && "Name Z-A"}
-                      {selectedSort === "feeLowest" && "Lowest Fee"}
-                      {selectedSort === "feeHighest" && "Highest Fee"}
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[0.76rem] font-semibold">
+                      {sortLabels[selectedSort]}
                       <button
                         onClick={() => setSelectedSort("newest")}
-                        className="hover:text-amber-900 ml-1"
+                        className="bg-transparent border-none cursor-pointer text-amber-600 flex p-0 hover:text-amber-800"
                       >
-                        <X size={14} />
+                        <X size={12} />
                       </button>
+                    </span>
+                  )}
+                  {activeFiltersCount === 0 && (
+                    <span className="text-[0.78rem] text-gray-300 italic">
+                      No filters applied
                     </span>
                   )}
                 </div>
@@ -431,111 +450,130 @@ export const AllClubs = () => {
         )}
       </div>
 
-      {/* Clubs Grid */}
+      {/* ══ EMPTY STATE ════════════════════════════ */}
       {clubs.length === 0 ? (
-        <div className="min-h-[400px] flex flex-col items-center justify-center text-gray-500 italic bg-white rounded-3xl p-8">
-          <Sparkles className="mb-4 text-gray-300" size={48} />
-          <p className="text-lg mb-2">No clubs found matching your criteria</p>
-          <p className="text-sm text-gray-400 mb-4">
-            Try adjusting your filters or search term
+        <div className="min-h-[420px] flex flex-col items-center justify-center bg-white rounded-3xl border border-gray-100 text-center p-12">
+          <div className="w-18 h-18 rounded-[22px] bg-linear-to-br from-violet-100 to-pink-100 flex items-center justify-center mb-5 p-4">
+            <Sparkles size={28} className="text-purple-500" />
+          </div>
+          <h3 className="font-bricolage text-xl font-bold text-[#1a1a2e] mb-2">
+            No clubs found
+          </h3>
+          <p className="text-sm text-gray-400 max-w-xs leading-relaxed mb-6">
+            Try adjusting your filters or search term to find the right
+            community.
           </p>
           <button
             onClick={handleClearFilters}
-            className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+            className="px-7 py-3 bg-[#1a1a2e] text-white font-bold text-sm rounded-xl hover:bg-indigo-600 transition-colors cursor-pointer font-outfit"
           >
             Clear all filters
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {clubs.map((club) => (
+        /* ══ CLUBS GRID ════════════════════════════ */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {clubs.map((club, idx) => (
             <div
               key={club._id}
-              className="group relative bg-white border border-gray-100 rounded-[2.5rem] p-7 shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_25px_60px_rgba(59,130,246,0.12)] transition-all duration-500 flex flex-col justify-between overflow-hidden"
+              className="club-card ac-fadein bg-white rounded-[22px] border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col"
+              style={{ animationDelay: `${idx * 0.04}s` }}
             >
-              {/* Image Section */}
-              <div className="relative mb-6 overflow-hidden rounded-[1.8rem]">
+              {/* Image */}
+              <div className="relative h-48 overflow-hidden shrink-0">
                 {club.bannerImage ? (
                   <img
                     src={club.bannerImage}
                     alt={club.clubName}
-                    className="h-44 w-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="card-img w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="h-44 w-full bg-linear-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
-                    <LayoutGrid className="text-blue-200" size={40} />
+                  <div className="w-full h-full bg-linear-to-br from-violet-100 to-pink-100 flex items-center justify-center">
+                    <LayoutGrid size={36} className="text-violet-300" />
                   </div>
                 )}
 
-                {/* Membership Fee Tag */}
-                <div className="absolute top-4 right-4">
+                {/* hover overlay */}
+                <div className="card-overlay opacity-0 absolute inset-0 bg-linear-to-t from-indigo-600/35 to-transparent" />
+
+                {/* Fee badge */}
+                <div className="absolute top-3.5 right-3.5">
                   <span
-                    className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border backdrop-blur-md ${
+                    className={`px-3 py-1 rounded-full text-[0.62rem] font-extrabold tracking-[0.08em] uppercase backdrop-blur-md border
+                    ${
                       club.membershipFee > 0
-                        ? "bg-white/90 text-amber-600 border-amber-100"
-                        : "bg-white/90 text-emerald-600 border-emerald-100"
+                        ? "bg-amber-50/90 text-amber-700 border-amber-200"
+                        : "bg-emerald-50/90 text-emerald-700 border-emerald-200"
                     }`}
                   >
                     {club.membershipFee > 0 ? `$${club.membershipFee}` : "Free"}
                   </span>
                 </div>
 
-                {/* Created Date */}
-                <div className="absolute bottom-4 left-4">
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/80 backdrop-blur-sm rounded-full text-xs text-gray-600">
-                    <Clock size={12} />
-                    {new Date(club.createdAt).toLocaleDateString()}
+                {/* Date badge */}
+                <div className="absolute bottom-3.5 left-3.5">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/85 backdrop-blur-sm rounded-full text-[0.67rem] text-gray-500 font-medium">
+                    <Clock size={10} />
+                    {new Date(club.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
                   </span>
                 </div>
               </div>
 
-              {/* Content Section */}
-              <div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition-colors line-clamp-1">
+              {/* Content */}
+              <div className="p-5 flex flex-col flex-1">
+                {/* Title */}
+                <h3 className="font-bricolage text-[1.1rem] font-bold text-[#1a1a2e] mb-2 tracking-[-0.02em] truncate">
                   {club.clubName}
                 </h3>
-                <p className="text-gray-500 text-sm leading-relaxed mb-6 line-clamp-2 font-light">
+
+                {/* Description */}
+                <p className="text-[0.82rem] text-gray-400 leading-relaxed mb-4 line-clamp-2 flex-1">
                   {club.description}
                 </p>
 
-                {/* Meta Details */}
-                <div className="space-y-3 mb-8">
-                  <div className="flex items-center gap-3 text-gray-600 group/item">
-                    <div className="p-2 bg-gray-50 rounded-xl group-hover/item:bg-blue-50 group-hover/item:text-blue-600 transition-all">
-                      <Tag size={16} />
-                    </div>
-                    <span className="text-sm font-medium">{club.category}</span>
-                  </div>
+                {/* Meta chips */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {/* Category */}
+                  <span className="cat-chip inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 text-gray-500 rounded-lg text-[0.72rem] font-semibold border border-transparent cursor-default transition-all">
+                    <Tag size={11} /> {club.category}
+                  </span>
 
-                  <div className="flex items-center gap-3 text-gray-600 group/item">
-                    <div className="p-2 bg-gray-50 rounded-xl group-hover/item:bg-rose-50 group-hover/item:text-rose-600 transition-all">
-                      <MapPin size={16} />
-                    </div>
-                    <span className="text-sm font-medium">{club.location}</span>
-                  </div>
-
-                  <div className="flex items-center gap-3 text-gray-600 group/item">
-                    <div className="p-2 bg-gray-50 rounded-xl group-hover/item:bg-emerald-50 group-hover/item:text-emerald-600 transition-all">
-                      <DollarSign size={16} />
-                    </div>
-                    <span className="text-sm font-medium">
-                      Membership Fee: ${club.membershipFee || 0}
+                  {/* Location */}
+                  {club.location && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-red-600 rounded-lg text-[0.72rem] font-semibold border border-red-100">
+                      <MapPin size={11} /> {club.location}
                     </span>
-                  </div>
-                </div>
-              </div>
+                  )}
 
-              {/* Action Button */}
-              <Link
-                to={`/clubs/${club._id}`}
-                className="group/btn relative mt-auto flex items-center justify-center gap-3 w-full py-4 bg-gray-900 text-white rounded-3xl font-bold overflow-hidden transition-all duration-300 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-200 active:scale-95"
-              >
-                <span className="z-10">View Club Details</span>
-                <ArrowRight
-                  size={18}
-                  className="z-10 group-hover/btn:translate-x-2 transition-transform duration-300"
-                />
-              </Link>
+                  {/* Fee */}
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[0.72rem] font-semibold border
+                    ${
+                      club.membershipFee > 0
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                        : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    }`}
+                  >
+                    <DollarSign size={11} />
+                    {club.membershipFee > 0
+                      ? `$${club.membershipFee} / month`
+                      : "Free membership"}
+                  </span>
+                </div>
+
+                {/* CTA */}
+                <Link
+                  to={`/clubs/${club._id}`}
+                  className="view-btn font-bricolage flex items-center justify-center gap-2 py-3.5 bg-[#1a1a2e] text-white rounded-2xl font-bold text-sm no-underline tracking-[0.01em] hover:bg-indigo-600"
+                >
+                  View Club Details
+                  <ArrowRight size={15} />
+                </Link>
+              </div>
             </div>
           ))}
         </div>
