@@ -215,7 +215,7 @@ export const AllClubs = () => {
 
   /* ── MAIN RENDER ──────────────────────────────── */
   return (
-    <div className="font-outfit min-h-screen bg-[#fafaf8] px-6 md:px-10 py-12">
+    <div className="max-w-[1488px] mx-auto font-outfit min-h-screen bg-[#fafaf8] px-6 md:px-10 py-12">
       <style>{ANIM}</style>
 
       {/* ══ PAGE HEADER ════════════════════════════ */}
