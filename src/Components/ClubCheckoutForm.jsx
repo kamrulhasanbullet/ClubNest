@@ -106,7 +106,7 @@ export const ClubCheckoutForm = ({
   };
 
   return (
-    <div className="mt-6 p-6 border rounded-xl bg-white shadow">
+    <div className="mt-6 p-6 border border-gray-100 rounded-xl bg-white shadow">
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
@@ -135,7 +135,7 @@ export const ClubCheckoutForm = ({
         <div>
           <label className="block text-sm font-medium mb-2">Card Details</label>
           <CardElement
-            className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             options={{
               style: {
                 base: {

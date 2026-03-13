@@ -179,12 +179,12 @@ export const AllClubs = () => {
   /* ── Loading skeleton ─────────────────────────── */
   if (isLoading)
     return (
-      <div className="font-outfit min-h-screen bg-[#fafaf8] p-10">
+      <div className="max-w-[1488px] mx-auto font-outfit min-h-screen bg-[#fafaf8] p-10">
         <style>{ANIM}</style>
         <div className="ac-skel w-64 h-12 rounded-xl bg-gray-200 mb-3" />
         <div className="ac-skel w-44 h-5  rounded-lg bg-gray-200 mb-10" />
         <div className="ac-skel h-16 rounded-2xl bg-gray-200 mb-9" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="ac-skel h-96 rounded-2xl bg-gray-200" />
           ))}
