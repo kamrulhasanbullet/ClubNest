@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { useNavigate, useLocation, NavLink } from "react-router";
 import { AuthContext } from "../../context/AuthContext/AuthContext";
+import Swal from "sweetalert2";
 
 export const Login = () => {
   const { signInUser, signInWithGoogle } = use(AuthContext);
@@ -21,7 +22,12 @@ export const Login = () => {
     const { email, password } = data;
     try {
       await signInUser(email, password);
-      toast.success("Login Successful!");
+      Swal.fire({
+        icon: "success",
+        title: "Log In Successful!",
+        timer: 2000,
+        showConfirmButton: false,
+      });
       navigate(from, { replace: true });
     } catch (err) {
       const msg = err.message
@@ -52,7 +58,12 @@ export const Login = () => {
         }),
       });
 
-      toast.success("Logged in with Google!");
+      Swal.fire({
+        icon: "success",
+        title: "LogIn Successful!",
+        timer: 2000,
+        showConfirmButton: false,
+      });
       navigate(from, { replace: true });
     } catch (err) {
       const msg = err.message
