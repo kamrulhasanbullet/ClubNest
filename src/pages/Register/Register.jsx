@@ -123,7 +123,7 @@ export const Register = () => {
       />
 
       {/* ── Card ── */}
-      <div className="relative z-10 w-full max-w-[440px] mx-6 bg-white/4 border border-white/10 rounded-3xl px-11 pt-12 pb-11 backdrop-blur-2xl shadow-[0_32px_80px_rgba(0,0,0,0.55),0_0_120px_rgba(139,92,246,0.07),inset_0_0_0_1px_rgba(255,255,255,0.05)]">
+      <div className="relative z-10 w-full max-w-[440px] mx-6 bg-white/4 border border-white/10 rounded-3xl px-8 pt-12 pb-11 backdrop-blur-2xl shadow-[0_32px_80px_rgba(0,0,0,0.55),0_0_120px_rgba(139,92,246,0.07),inset_0_0_0_1px_rgba(255,255,255,0.05)]">
         {/* Top accent bar */}
         <div className="absolute top-0 left-10 w-14 h-[3px] rounded-b bg-linear-to-r from-violet-500 to-blue-500" />
 
@@ -132,9 +132,7 @@ export const Register = () => {
           Get started
         </p>
         <h1 className="text-[40px] font-light leading-tight text-[#f0f4ff] mb-1.5 font-serif">
-          Create <em className="italic text-[#c4b5fd]">your</em>
-          <br />
-          account
+          Create <em className="italic text-[#c4b5fd]">your</em> account
         </h1>
         <p className="text-[13px] text-white/35 mb-9">
           Fill in your details to join
