@@ -26,121 +26,58 @@ import { EventsRegistrations } from "../pages/DashBoard/ClubManager/EventsRegist
 import { EditClub } from "../Components/EditClub";
 import { EditEvent } from "../Components/EditEvent";
 import ErrorPage from "../Components/ErrorPage";
-
-
+import { RootLayout } from "../layout/RootLayout";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: MainLayout,
+    Component: RootLayout,
     errorElement: <ErrorPage />,
     children: [
       {
-        index: true,
-        Component: Home,
+        Component: MainLayout,
+        children: [
+          { index: true, Component: Home },
+          { path: "clubs", Component: AllClubs },
+          { path: "clubs/:id", Component: ClubDetails },
+          { path: "events", Component: UpComingEvents },
+          { path: "events/:id", Component: EventDetails },
+          { path: "register", Component: Register },
+          { path: "login", Component: Login },
+          { path: "profile", Component: Profile },
+        ],
       },
       {
-        path: "/clubs",
-        Component: AllClubs,
-      },
-      {
-        path: "/clubs/:id",
-        Component: ClubDetails,
-      },
-      {
-        path: "/events",
-        Component: UpComingEvents,
-      },
-      {
-        path: "/events/:id",
-        Component: EventDetails,
-      },
-      {
-        path: "/register",
-        Component: Register,
-      },
-      {
-        path: "/login",
-        Component: Login,
-      },
-      {
-        path: "/dashboard",
+        path: "dashboard",
         Component: DashboardLayout,
         children: [
           {
-            path:'admin',
+            path: "admin",
             Component: AdminPanelLayout,
             children: [
-              {
-                index: true,
-                Component: AdminPanel,
-              },
-              {
-                path: 'manage-users',
-                Component: ManageUsersRole,
-              },
-              {
-                path: 'manage-clubs',
-                Component: ManageClubs,
-              },
-              {
-                path: 'payments',
-                Component: ManagePayments,
-              },
-            ]
+              { index: true, Component: AdminPanel },
+              { path: "manage-users", Component: ManageUsersRole },
+              { path: "manage-clubs", Component: ManageClubs },
+              { path: "payments", Component: ManagePayments },
+            ],
           },
           {
             path: "manager",
             Component: ClubMangerLayout,
             children: [
-              {
-                index: true,
-                Component: ManageUsers,
-              },
-              {
-                path: 'my-clubs',
-                Component: MyClubs,
-              },
-              {
-                path: 'create-club',
-                Component: CreateClub,
-              },
-              {
-                path: 'edit-club/:id',
-                Component: EditClub,
-              },
-              {
-                path: 'club-members',
-                Component: ClubMembers,
-              },
-              {
-                path: 'events',
-                Component: EventsManagement,
-              },
-              {
-                path: 'edit-event/:id',
-                Component: EditEvent,
-              },
-              {
-                path: 'create-event',
-                Component: CreateEvents,
-              },
-              {
-                path: 'event-registrations',
-                Component: EventsRegistrations,
-              },
-            ]
+              { index: true, Component: ManageUsers },
+              { path: "my-clubs", Component: MyClubs },
+              { path: "create-club", Component: CreateClub },
+              { path: "edit-club/:id", Component: EditClub },
+              { path: "club-members", Component: ClubMembers },
+              { path: "events", Component: EventsManagement },
+              { path: "edit-event/:id", Component: EditEvent },
+              { path: "create-event", Component: CreateEvents },
+              { path: "event-registrations", Component: EventsRegistrations },
+            ],
           },
-          {
-            path: "member",
-            Component: MemberDashboard,
-          },
+          { path: "member", Component: MemberDashboard },
         ],
-      },
-
-      {
-        path: "/profile",
-        Component: Profile,
       },
     ],
   },
