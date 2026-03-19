@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { use } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { AuthContext } from "../../../context/AuthContext/AuthContext";
 import {
   MapPin,
@@ -66,7 +66,10 @@ export const AllClubs = () => {
   /* ── State (logic untouched) ──────────────────── */
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [searchParams] = useSearchParams();
+  const [selectedCategory, setSelectedCategory] = useState(
+    searchParams.get("category") || "",
+  );
   const [selectedSort, setSelectedSort] = useState("newest");
   const [membershipFeeFilter, setMembershipFeeFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);

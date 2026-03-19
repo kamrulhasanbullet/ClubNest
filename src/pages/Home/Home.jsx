@@ -3,7 +3,7 @@ import { motion, useInView, useMotionValue, useSpring } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
   FaSearch,
   FaUsers,
@@ -222,6 +222,8 @@ const testimonials = [
 
 /* MAIN COMPONENT */
 export const Home = () => {
+  const navigate = useNavigate();
+
   const { data: allClubs = [], isLoading } = useQuery({
     queryKey: ["allClubs"],
     queryFn: fetchAllClubs,
@@ -232,16 +234,19 @@ export const Home = () => {
   });
 
   const approvedClubs = allClubs.filter((c) => c.status === "approved");
+
   const featuredClubs = [...approvedClubs]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 8);
   const freeClubs = approvedClubs.filter(
     (c) => !c.membershipFee || c.membershipFee === 0,
   ).length;
+
   const totalMembers = approvedClubs.reduce(
     (s, c) => s + (c.membersCount || 0),
     0,
   );
+
   const upcomingEvents = allEvents.filter(
     (e) => new Date(e.eventDate) > new Date(),
   );
@@ -1172,6 +1177,11 @@ export const Home = () => {
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.04 }}
                     className="cat-card"
+                    onClick={() =>
+                      navigate(
+                        `/clubs?category=${encodeURIComponent(cat.name)}`,
+                      )
+                    }
                     style={{
                       background: cat.color,
                       border: `1.5px solid ${cat.accent}22`,
