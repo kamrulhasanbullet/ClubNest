@@ -4,7 +4,7 @@ import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../../../context/AuthContext/AuthContext";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
-import { ClubCheckoutForm } from "../../../components/ClubCheckoutForm";
+import { ClubCheckoutForm } from "../../../Components/ClubCheckoutForm";
 import { toast } from "react-hot-toast";
 import {
   ChartBarStacked,
@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Clock,
 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PK);
 
@@ -202,6 +203,12 @@ export const ClubDetails = () => {
   return (
     <div className="font-outfit min-h-screen bg-[#fafaf8]">
       <style>{STYLES}</style>
+
+      <Helmet>
+        <title>
+          {club.clubName ? `${club.clubName} - ClubNest` : "ClubNest"}
+        </title>
+      </Helmet>
 
       {/* ── HERO BANNER ─────────────────────── */}
       <div className="relative max-w-4xl mx-auto h-80 md:h-[420px] overflow-hidden cd-fadein rounded-xl">
@@ -467,7 +474,7 @@ export const ClubDetails = () => {
               <button
                 onClick={() => joinClubMutation.mutate()}
                 disabled={joinClubMutation.isLoading || isPending}
-                className={`join-btn w-full py-4 rounded-2xl font-bricolage font-bold text-white text-[1rem] transition-all duration-200 flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed
+                className={`join-btn w-full py-4 rounded-2xl font-bricolage font-bold text-white text-[1rem] transition-all duration-200 flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
                   ${isPaid ? "bg-[#1a1a2e] shadow-[0_8px_28px_rgba(26,26,46,0.2)]" : "join-btn-free bg-emerald-600 shadow-[0_8px_28px_rgba(22,163,74,0.2)]"}`}
               >
                 {joinClubMutation.isLoading ? (

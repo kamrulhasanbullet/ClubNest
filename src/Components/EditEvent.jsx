@@ -198,6 +198,10 @@ export const EditEvent = () => {
 
   return (
     <div className="min-h-screen bg-[#060810] text-white px-4 sm:px-8 py-8 relative overflow-hidden">
+      <Helmet>
+        <title>Edit Event - ClubNest</title>
+      </Helmet>
+
       {/* ── Aurora bg ── */}
       <div className="absolute top-0 right-0 w-[500px] h-[400px] rounded-full bg-linear-to-bl from-cyan-600 to-blue-700 opacity-6 blur-[110px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[300px] rounded-full bg-linear-to-tr from-blue-600 to-violet-600 opacity-5 blur-[100px] pointer-events-none" />

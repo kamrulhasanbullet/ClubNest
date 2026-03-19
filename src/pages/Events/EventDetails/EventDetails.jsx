@@ -17,6 +17,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { EventCheckoutForm } from "../../../Components/EventCheckOutForm";
+import { Helmet } from "react-helmet-async";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PK);
 
@@ -244,6 +245,12 @@ export const EventDetails = () => {
   return (
     <div className="font-outfit min-h-screen bg-[#fafaf8] px-4 md:px-6 py-12">
       <style>{STYLES}</style>
+
+      <Helmet>
+        <title>
+          {event.title ? `${event.title} - ClubNest` : "ClubNest"}
+        </title>
+      </Helmet>
 
       <div className="max-w-4xl mx-auto space-y-6">
         {/* ── HERO CARD ─────────────────────── */}

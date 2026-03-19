@@ -12,6 +12,7 @@ import {
   Trash2,
   Plus,
 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -223,6 +224,10 @@ export const MyClubs = () => {
 
   return (
     <div className="min-h-screen bg-[#060810] text-white px-4 sm:px-8 py-8 space-y-8 relative overflow-hidden">
+      <Helmet>
+        <title>My Clubs - ClubNest</title>
+      </Helmet>
+
       {/* ── Aurora bg ── */}
       <div className="absolute top-0 right-0 w-[500px] h-[400px] rounded-full bg-linear-to-bl from-blue-600 to-violet-700 opacity-6 blur-[110px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[300px] rounded-full bg-linear-to-tr from-cyan-500 to-blue-600 opacity-5 blur-[100px] pointer-events-none" />

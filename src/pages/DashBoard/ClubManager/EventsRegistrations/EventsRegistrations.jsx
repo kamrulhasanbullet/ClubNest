@@ -13,6 +13,7 @@ import {
   AlertCircle,
   ChevronDown,
 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 const REGS_PER_PAGE = 10;
 
@@ -186,6 +187,10 @@ export const EventsRegistrations = () => {
 
   return (
     <div className="min-h-screen bg-[#060810] text-white px-4 sm:px-8 pt-8 pb-28 space-y-8 relative overflow-hidden">
+      <Helmet>
+        <title>Event Regestration - ClubNest</title>
+      </Helmet>
+
       {/* ── Aurora bg ── */}
       <div className="absolute top-0 right-0 w-[500px] h-[400px] rounded-full bg-linear-to-bl from-blue-600 to-violet-700 opacity-6 blur-[110px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[300px] rounded-full bg-linear-to-tr from-cyan-500 to-blue-600 opacity-5 blur-[100px] pointer-events-none" />

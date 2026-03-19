@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import { useLocation, useNavigate, NavLink } from "react-router";
 import { AuthContext } from "../../context/AuthContext/AuthContext";
 import Swal from "sweetalert2";
+import { Helmet } from "react-helmet-async";
 
 export const Register = () => {
   const { createUser, updateUserProfile, signInWithGoogle, signOutUser } =
@@ -108,6 +109,10 @@ export const Register = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#060810] relative overflow-hidden py-10">
+      <Helmet>
+        <title>Register - ClubNest</title>
+      </Helmet>
+
       {/* ── Aurora blobs ── */}
       <div className="absolute -top-44 -left-44 w-[600px] h-[600px] rounded-full bg-linear-to-br from-violet-500 to-blue-600 opacity-20 blur-[120px] animate-pulse" />
       <div className="absolute -bottom-36 -right-36 w-[500px] h-[500px] rounded-full bg-linear-to-br from-cyan-400 to-indigo-500 opacity-15 blur-[120px] animate-pulse [animation-delay:3s]" />

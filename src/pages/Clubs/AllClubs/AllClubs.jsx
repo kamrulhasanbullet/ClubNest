@@ -17,6 +17,7 @@ import {
   Clock,
   Loader,
 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 /* ── Font injection ─────────────────────────────── */
 const useFont = () => {
@@ -220,6 +221,10 @@ export const AllClubs = () => {
   return (
     <div className="max-w-[1488px] mx-auto font-outfit min-h-screen bg-[#fafaf8] px-6 md:px-10 py-12">
       <style>{ANIM}</style>
+
+      <Helmet>
+        <title>All Clubs - ClubNest</title>
+      </Helmet>
 
       {/* ══ PAGE HEADER ════════════════════════════ */}
       <div className="flex items-end justify-between flex-wrap gap-3 mb-10">

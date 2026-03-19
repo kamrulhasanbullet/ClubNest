@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import { useNavigate, useLocation, NavLink } from "react-router";
 import { AuthContext } from "../../context/AuthContext/AuthContext";
 import Swal from "sweetalert2";
+import { Helmet } from "react-helmet-async";
 
 export const Login = () => {
   const { signInUser, signInWithGoogle } = use(AuthContext);
@@ -76,6 +77,10 @@ export const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#060810] relative overflow-hidden">
+      <Helmet>
+        <title>Login - ClubNest</title>
+      </Helmet>
+
       {/* ── Aurora blobs ── */}
       <div className="absolute -top-44 -left-44 w-[600px] h-[600px] rounded-full bg-linear-to-br from-blue-500 to-violet-600 opacity-20 blur-[120px] animate-pulse" />
       <div className="absolute -bottom-36 -right-36 w-[500px] h-[500px] rounded-full bg-linear-to-br from-cyan-400 to-blue-500 opacity-15 blur-[120px] animate-pulse [animation-delay:3s]" />

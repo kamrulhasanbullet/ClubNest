@@ -9,6 +9,7 @@ import {
   Sparkles,
   DollarSign,
 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 /* ── Font injection ─────────────────────────── */
 const useFont = () => {
@@ -127,6 +128,11 @@ export const UpComingEvents = () => {
   return (
     <div className="font-outfit bg-[#fafaf8] min-h-screen px-6 md:px-10 py-12">
       <style>{STYLES}</style>
+
+      <Helmet>
+        <title>Upcoming Events - ClubNest</title>
+      </Helmet>
+
       <div style={{ maxWidth: "1488px" }} className="mx-auto">
         {/* ── PAGE HEADER ──────────────────────── */}
         <div className="mb-10 ue-fadein">
