@@ -45,6 +45,16 @@ const fetchAllClubs = async () => {
   }
 };
 
+const fetchStats = async () => {
+  try {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/stats`);
+    if (!res.ok) return { totalMembers: 0 };
+    return res.json();
+  } catch {
+    return { totalMembers: 0 };
+  }
+};
+
 const fetchEvents = async () => {
   try {
     const res = await fetch(`${import.meta.env.VITE_API_URL}/events`);
@@ -242,10 +252,10 @@ export const Home = () => {
     (c) => !c.membershipFee || c.membershipFee === 0,
   ).length;
 
-  const totalMembers = approvedClubs.reduce(
-    (s, c) => s + (c.membersCount || 0),
-    0,
-  );
+  const { data: stats = { totalMembers: 0 } } = useQuery({
+    queryKey: ["stats"],
+    queryFn: fetchStats,
+  });
 
   const upcomingEvents = allEvents.filter(
     (e) => new Date(e.eventDate) > new Date(),
@@ -258,7 +268,7 @@ export const Home = () => {
       suffix: "+",
       icon: "🏛️",
     },
-    { label: "Members", value: totalMembers || 8400, suffix: "+", icon: "👥" },
+    { label: "Members", value: stats.totalMembers || 8400, suffix: "+", icon: "👥" },
     {
       label: "Upcoming Events",
       value: upcomingEvents.length || 340,
