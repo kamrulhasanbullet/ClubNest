@@ -202,7 +202,6 @@ export const ManageUsers = () => {
                 {user?.displayName?.split(" ")[0] || "Manager"}
               </em>
             </h1>
-            <p className="text-sm text-white/30 mt-1">{user?.email}</p>
           </div>
         </div>
 

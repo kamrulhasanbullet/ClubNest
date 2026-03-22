@@ -1,4 +1,4 @@
-import { use } from "react";
+import { use, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { useLocation, useNavigate, NavLink } from "react-router";
@@ -13,6 +13,33 @@ export const Register = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/login";
+  const [photoURL, setPhotoURL] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Cloudinary upload function
+  const uploadToCloudinary = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append(
+      "upload_preset",
+      import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET,
+    );
+
+    setUploading(true);
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        { method: "POST", body: formData },
+      );
+      const data = await res.json();
+      setPhotoURL(data.secure_url);
+    } catch {
+      toast.error("Image upload failed!");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const {
     register,
@@ -21,7 +48,13 @@ export const Register = () => {
   } = useForm();
 
   const onSubmit = async (data) => {
-    const { name, email, password, photoURL } = data;
+    // const { name, email, password, photoURL } = data;
+    const { name, email, password } = data;
+    if (!photoURL) {
+      toast.error("Please upload a profile photo!");
+      return;
+    }
+    setLoading(true);
     try {
       const result = await createUser(email, password);
       await updateUserProfile(name, photoURL);
@@ -58,6 +91,8 @@ export const Register = () => {
         .replace("auth/", "")
         .replace(/-/g, " ");
       toast.error(msg.charAt(0).toUpperCase() + msg.slice(1));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -186,23 +221,115 @@ export const Register = () => {
             )}
           </div>
 
-          {/* Photo URL */}
+          {/* Photo Upload - Cloudinary */}
           <div className="relative">
-            <input
-              id="photoURL"
-              type="text"
-              placeholder=" "
-              className={inputClass(errors.photoURL)}
-              {...register("photoURL", { required: "Photo URL is required" })}
-            />
-            <label htmlFor="photoURL" className={labelClass}>
-              Photo URL
+            <label className="block text-[11px] text-white/35 mb-2 pl-1 tracking-wide">
+              Profile Photo
             </label>
-            {errors.photoURL && (
-              <p className="text-[11.5px] text-red-400 mt-1.5 pl-1">
-                {errors.photoURL.message}
-              </p>
-            )}
+            <div className="flex items-center gap-3">
+              {/* Preview */}
+              {photoURL && (
+                <img
+                  src={photoURL}
+                  alt="preview"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-blue-500/60 shrink-0"
+                />
+              )}
+
+              {/* File Input */}
+              <label
+                className={`flex-1 flex items-center justify-center gap-2 py-[13px] px-4 rounded-xl border border-dashed text-[13px] cursor-pointer transition-all duration-200 ${
+                  uploading
+                    ? "border-blue-500/40 bg-blue-500/6 text-blue-400 cursor-wait"
+                    : photoURL
+                      ? "border-green-500/40 bg-green-500/5 text-green-400"
+                      : "border-white/15 bg-white/3 text-white/40 hover:border-blue-500/50 hover:bg-blue-500/4 hover:text-white/60"
+                }`}
+              >
+                {uploading ? (
+                  <div className="flex flex-col items-center gap-1.5 w-full">
+                    <div className="flex items-center gap-2">
+                      {/* Spinner */}
+                      <svg
+                        className="animate-spin w-4 h-4 text-blue-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8z"
+                        />
+                      </svg>
+                      <span>Uploading to Cloudinary...</span>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="w-full h-[3px] bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-500 rounded-full animate-[progress_1.5s_ease-in-out_infinite]"
+                        style={{ width: "60%" }}
+                      />
+                    </div>
+                  </div>
+                ) : photoURL ? (
+                  <div className="flex items-center gap-2">
+                    {/* Check icon */}
+                    <svg
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span>Photo uploaded! Click to change</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <svg
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                      />
+                    </svg>
+                    <span>Upload photo</span>
+                  </div>
+                )}
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploading}
+                  onChange={(e) => {
+                    if (e.target.files[0])
+                      uploadToCloudinary(e.target.files[0]);
+                  }}
+                />
+              </label>
+            </div>
           </div>
 
           {/* Password */}
@@ -242,9 +369,35 @@ export const Register = () => {
           {/* Submit */}
           <button
             type="submit"
-            className="relative w-full py-[15px] rounded-xl bg-linear-to-br from-violet-500 to-blue-500 text-white text-sm font-semibold tracking-wide cursor-pointer overflow-hidden shadow-[0_4px_24px_rgba(139,92,246,0.35)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(139,92,246,0.50)] active:translate-y-0 before:absolute before:inset-0 before:bg-linear-to-br before:from-white/15 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-200"
+            disabled={loading || uploading}
+            className="relative w-full py-[15px] rounded-xl bg-linear-to-br from-violet-500 to-blue-500 text-white text-sm font-semibold tracking-wide overflow-hidden shadow-[0_4px_24px_rgba(139,92,246,0.35)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(139,92,246,0.50)] active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer"
           >
-            Create account →
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg
+                  className="animate-spin w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8z"
+                  />
+                </svg>
+                Creating account...
+              </span>
+            ) : (
+              "Create account →"
+            )}
           </button>
         </form>
 
