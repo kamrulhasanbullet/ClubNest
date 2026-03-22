@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { use } from "react";
+import { use, useState } from "react";
 import { AuthContext } from "../context/AuthContext/AuthContext";
 import Swal from "sweetalert2";
 import {
@@ -30,11 +30,14 @@ const CATEGORIES = [
 export const CreateClub = () => {
   const { user } = use(AuthContext);
   const queryClient = useQueryClient();
+  const [bannerPreview, setBannerPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm();
 
@@ -81,6 +84,28 @@ export const CreateClub = () => {
       });
     },
   });
+
+  const uploadToCloudinary = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append(
+      "upload_preset",
+      import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET,
+    );
+
+    setUploading(true);
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        { method: "POST", body: formData },
+      );
+      const data = await res.json();
+      setBannerPreview(data.secure_url);
+      return data.secure_url;
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const onSubmit = (data) => createClubMutation.mutate(data);
 
@@ -250,15 +275,53 @@ export const CreateClub = () => {
             <div>
               <label className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.12em] uppercase text-white/35 mb-2">
                 <Image size={12} />
-                Banner Image URL
+                Banner Image
               </label>
+
               <input
+                type="hidden"
                 {...register("bannerImage", {
-                  required: "Banner image URL is required",
+                  required: "Banner image is required",
                 })}
-                placeholder="https://example.com/banner.jpg"
-                className={inputClass(errors.bannerImage)}
               />
+
+              {/* File input */}
+              <label
+                className={`flex items-center justify-center gap-2 w-full border-2 border-dashed rounded-xl px-4 py-5 cursor-pointer transition-all duration-200 ${
+                  uploading
+                    ? "border-blue-500/50 bg-blue-500/5"
+                    : "border-white/10 hover:border-violet-400/40 hover:bg-white/3"
+                }`}
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const url = await uploadToCloudinary(file);
+                    setValue("bannerImage", url);
+                  }}
+                />
+                {uploading ? (
+                  <span className="text-sm text-blue-400">Uploading…</span>
+                ) : (
+                  <span className="text-sm text-white/30">
+                    Click to upload image
+                  </span>
+                )}
+              </label>
+
+              {/* Preview */}
+              {bannerPreview && (
+                <img
+                  src={bannerPreview}
+                  alt="Banner preview"
+                  className="mt-3 w-full h-40 object-cover rounded-xl border border-white/10"
+                />
+              )}
+
               {errors.bannerImage && (
                 <p className="text-[11px] text-red-400 mt-1.5 pl-1">
                   {errors.bannerImage.message}
