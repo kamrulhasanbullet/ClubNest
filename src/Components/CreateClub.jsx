@@ -24,6 +24,11 @@ const CATEGORIES = [
   "Science",
   "Business",
   "Gaming",
+  "Books",
+  "Cooking",
+  "Fitness",
+  "Gaming",
+  "Travel",
   "Other",
 ];
 

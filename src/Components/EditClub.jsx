@@ -17,15 +17,20 @@ import {
 import { Helmet } from "react-helmet-async";
 
 const CATEGORIES = [
-  "Technology",
+  "Photography",
   "Sports",
-  "Arts",
   "Music",
-  "Business",
+  "Technology",
+  "Art",
+  "Literature",
   "Science",
-  "Health",
-  "Social",
-  "Academic",
+  "Business",
+  "Gaming",
+  "Books",
+  "Cooking",
+  "Fitness",
+  "Gaming",
+  "Travel",
   "Other",
 ];
 
@@ -41,6 +46,7 @@ export const EditClub = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = use(AuthContext);
+  const [uploading, setUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     clubName: "",
@@ -123,6 +129,27 @@ export const EditClub = () => {
       ...prev,
       [name]: name === "membershipFee" ? parseFloat(value) || 0 : value,
     }));
+  };
+
+  const uploadToCloudinary = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append(
+      "upload_preset",
+      import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET,
+    );
+
+    setUploading(true);
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        { method: "POST", body: formData },
+      );
+      const data = await res.json();
+      return data.secure_url;
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -288,16 +315,42 @@ export const EditClub = () => {
             <div>
               <label className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.12em] uppercase text-white/35 mb-2">
                 <Image size={12} />
-                Banner Image URL
+                Banner Image
               </label>
-              <input
-                type="url"
-                name="bannerImage"
-                value={formData.bannerImage}
-                onChange={handleChange}
-                placeholder="https://example.com/banner.jpg"
-                className={inputClass}
-              />
+
+              <label
+                className={`flex items-center justify-center gap-2 w-full border-2 border-dashed rounded-xl px-4 py-5 cursor-pointer transition-all duration-200 ${
+                  uploading
+                    ? "border-blue-500/50 bg-blue-500/5"
+                    : "border-white/10 hover:border-violet-400/40 hover:bg-white/3"
+                }`}
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploading}
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const url = await uploadToCloudinary(file);
+                    setFormData((prev) => ({ ...prev, bannerImage: url }));
+                  }}
+                />
+                {uploading ? (
+                  <span className="text-sm text-blue-400">Uploading…</span>
+                ) : formData.bannerImage ? (
+                  <span className="text-sm text-green-400">
+                    ✓ Click to change image
+                  </span>
+                ) : (
+                  <span className="text-sm text-white/30">
+                    Click to upload image
+                  </span>
+                )}
+              </label>
+
+              {/* Preview */}
               {formData.bannerImage && (
                 <div className="mt-3 rounded-xl overflow-hidden border border-white/10">
                   <img
