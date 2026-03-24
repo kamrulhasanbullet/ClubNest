@@ -2,7 +2,9 @@
 
 **ClubNest** is a full-stack club management platform where users can discover, join, and manage clubs across various categories. Club managers can create and manage their own clubs, while admins oversee the entire platform.
 
-🔗 **Live Site:** [https://clubnest.netlify.app](https://clubnest.netlify.app)
+🔗 **Live Site:** [https://clubnest.netlify.app](https://clubnest.netlify.app) 
+</br>
+🦈 **Admin:** Gmail: admin@gmail.com  pass: Admin@gmail.com
 
 ---
 
